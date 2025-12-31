@@ -2,12 +2,17 @@ name: Deploy Next.js to Pages
 
 on:
   push:
-    branches: ["main"] # Nome da sua branch principal
+    branches: ["main"] # Certifique-se de que sua branch principal se chama 'main'
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -15,21 +20,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9 # Versão estável do pnpm
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: 'pnpm'
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
+
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
+
       - name: Static HTML export with Next.js
-        run: npm run build
+        run: pnpm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # Pasta que o Next.js gera no build
+          path: ./out
 
   deploy:
     environment:
